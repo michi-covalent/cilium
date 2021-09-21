@@ -620,7 +620,7 @@ func (s *XDSServer) deleteEndpoint(name string, wg *completion.WaitGroup, callba
 	return s.endpointMutator.Delete(EndpointTypeURL, name, []string{"127.0.0.1"}, wg, callback)
 }
 
-func getListenerFilter(isIngress bool, mayUseOriginalSourceAddr bool) *envoy_config_listener.ListenerFilter {
+func getListenerFilter(isIngress bool, mayUseOriginalSourceAddr bool, l7lb bool) *envoy_config_listener.ListenerFilter {
 	return &envoy_config_listener.ListenerFilter{
 		Name: "cilium.bpf_metadata",
 		ConfigType: &envoy_config_listener.ListenerFilter_TypedConfig{
@@ -628,6 +628,7 @@ func getListenerFilter(isIngress bool, mayUseOriginalSourceAddr bool) *envoy_con
 				IsIngress:                   isIngress,
 				MayUseOriginalSourceAddress: mayUseOriginalSourceAddr,
 				BpfRoot:                     bpf.GetMapRoot(),
+				EgressMarkSourceEndpointId:  l7lb,
 			}),
 		},
 	}
@@ -663,7 +664,7 @@ func (s *XDSServer) getListenerConf(name string, kind policy.L7ParserType, port 
 		},
 		// FilterChains: []*envoy_config_listener.FilterChain
 		ListenerFilters: []*envoy_config_listener.ListenerFilter{
-			getListenerFilter(isIngress, mayUseOriginalSourceAddr),
+			getListenerFilter(isIngress, mayUseOriginalSourceAddr, false),
 		},
 	}
 
@@ -1456,7 +1457,7 @@ func getNetworkPolicy(ep logger.EndpointUpdater, name string, policy *policy.L4P
 	ingressPolicyEnforced, egressPolicyEnforced bool) *cilium.NetworkPolicy {
 	p := &cilium.NetworkPolicy{
 		Name:             name,
-		Policy:           uint64(ep.GetIdentityLocked()),
+		EndpointId:       uint64(ep.GetID()),
 		ConntrackMapName: ep.ConntrackNameLocked(),
 	}
 
