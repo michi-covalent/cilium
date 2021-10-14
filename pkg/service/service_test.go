@@ -728,9 +728,6 @@ func (m *ManagerTestSuite) TestL7LoadBalancerServiceOverride(c *C) {
 	allBackends = append(allBackends, localBackend)
 	allBackends = append(allBackends, remoteBackends...)
 
-	err := m.svc.RegisterL7LBService("echo-other-node", "cilium-test", uint16(9090))
-	c.Assert(err, IsNil)
-
 	p1 := &lb.SVC{
 		Frontend:      frontend1,
 		Backends:      allBackends,
@@ -749,24 +746,47 @@ func (m *ManagerTestSuite) TestL7LoadBalancerServiceOverride(c *C) {
 	svc, ok := m.svc.svcByID[id]
 	c.Assert(len(svc.backends), Equals, len(allBackends))
 	c.Assert(ok, Equals, true)
+	c.Assert(svc.l7LBProxyPort, Equals, uint16(0))
+
+	// registering for ingress does not store the proxy port
+	err = m.svc.RegisterL7LBService("echo-other-node", "cilium-test", "testOwner", true, uint16(9090))
+	c.Assert(err, IsNil)
+
+	svc, ok = m.svc.svcByID[id]
+	c.Assert(len(svc.backends), Equals, len(allBackends))
+	c.Assert(ok, Equals, true)
+	c.Assert(svc.l7LBProxyPort, Equals, uint16(0))
+
+	// registering for egress stores the proxy port
+	err = m.svc.RegisterL7LBService("echo-other-node", "cilium-test", "testOwner", false, uint16(9090))
+	c.Assert(err, IsNil)
+
+	svc, ok = m.svc.svcByID[id]
+	c.Assert(len(svc.backends), Equals, len(allBackends))
+	c.Assert(ok, Equals, true)
 	c.Assert(svc.l7LBProxyPort, Equals, uint16(9090))
 
-	m.svc.RemoveL7LBService("echo-other-node", "cilium-test")
+	// Remove with an unregistered owner name does not remove
+	err = m.svc.RemoveL7LBService("echo-other-node", "cilium-test", "testOwner2", false)
+	c.Assert(err, Not(IsNil))
 
-	p2 := &lb.SVC{
-		Frontend:      frontend1,
-		Backends:      allBackends,
-		Type:          lb.SVCTypeClusterIP,
-		TrafficPolicy: lb.SVCTrafficPolicyCluster,
-		Name:          "echo-other-node",
-		Namespace:     "cilium-test",
-	}
+	svc, ok = m.svc.svcByID[id]
+	c.Assert(len(svc.backends), Equals, len(allBackends))
+	c.Assert(ok, Equals, true)
+	c.Assert(svc.l7LBProxyPort, Equals, uint16(9090))
 
-	// Insert the service entry of type ClusterIP.
-	created, id, err = m.svc.UpsertService(p2)
+	// Removing the ingress registration does not remove the proxy port
+	err = m.svc.RemoveL7LBService("echo-other-node", "cilium-test", "testOwner", true)
 	c.Assert(err, IsNil)
-	c.Assert(created, Equals, false)
-	c.Assert(id, Not(Equals), lb.ID(0))
+
+	svc, ok = m.svc.svcByID[id]
+	c.Assert(len(svc.backends), Equals, len(allBackends))
+	c.Assert(ok, Equals, true)
+	c.Assert(svc.l7LBProxyPort, Equals, uint16(9090))
+
+	// removing the egress registration removes the proxy port
+	err = m.svc.RemoveL7LBService("echo-other-node", "cilium-test", "testOwner", false)
+	c.Assert(err, IsNil)
 
 	svc, ok = m.svc.svcByID[id]
 	c.Assert(len(svc.backends), Equals, len(allBackends))

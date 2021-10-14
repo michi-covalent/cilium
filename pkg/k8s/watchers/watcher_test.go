@@ -160,11 +160,11 @@ func (f *fakeSvcManager) UpsertService(p *loadbalancer.SVC) (bool, loadbalancer.
 	panic("OnUpsertService() was called and is not set!")
 }
 
-func (f *fakeSvcManager) RegisterL7LBService(name, namespace string, proxyPort uint16) error {
+func (f *fakeSvcManager) RegisterL7LBService(name, namespace string, resourceName string, ingress bool, proxyPort uint16) error {
 	return nil
 }
 
-func (f *fakeSvcManager) RemoveL7LBService(name, namespace string) error {
+func (f *fakeSvcManager) RemoveL7LBService(name, namespace string, resourceName string, ingress bool) error {
 	return nil
 }
 

@@ -127,7 +127,7 @@ func (k *K8sWatcher) addCiliumEnvoyConfig(cec *cilium_v2alpha1.CiliumEnvoyConfig
 		}
 
 		// Tell service manager to redirect the service to the port
-		err = k.svcManager.RegisterL7LBService(svc.Name, svc.Namespace, proxyPort)
+		err = k.svcManager.RegisterL7LBService(svc.Name, svc.Namespace, cec.ObjectMeta.Name, cec.Spec.Ingress, proxyPort)
 		if err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func (k *K8sWatcher) updateCiliumEnvoyConfig(oldCEC *cilium_v2alpha1.CiliumEnvoy
 	}
 	for _, oldSvc := range removedServices {
 		// Tell service manager to remove old service redirection
-		err := k.svcManager.RemoveL7LBService(oldSvc.Name, oldSvc.Namespace)
+		err := k.svcManager.RemoveL7LBService(oldSvc.Name, oldSvc.Namespace, oldCEC.ObjectMeta.Name, oldCEC.Spec.Ingress)
 		if err != nil {
 			return err
 		}
@@ -209,7 +209,7 @@ func (k *K8sWatcher) updateCiliumEnvoyConfig(oldCEC *cilium_v2alpha1.CiliumEnvoy
 		}
 
 		// Tell service manager to redirect the service to the port
-		err = k.svcManager.RegisterL7LBService(svc.Name, svc.Namespace, proxyPort)
+		err = k.svcManager.RegisterL7LBService(svc.Name, svc.Namespace, newCEC.ObjectMeta.Name, newCEC.Spec.Ingress, proxyPort)
 		if err != nil {
 			return err
 		}
@@ -234,7 +234,7 @@ func (k *K8sWatcher) deleteCiliumEnvoyConfig(cec *cilium_v2alpha1.CiliumEnvoyCon
 
 	for _, svc := range cec.Spec.Services {
 		// Tell service manager to remove old service redirection
-		err := k.svcManager.RemoveL7LBService(svc.Name, svc.Namespace)
+		err := k.svcManager.RemoveL7LBService(svc.Name, svc.Namespace, cec.ObjectMeta.Name, cec.Spec.Ingress)
 		if err != nil {
 			return err
 		}

@@ -81,7 +81,7 @@ type svcInfo struct {
 	svcName                   string
 	svcNamespace              string
 	loadBalancerSourceRanges  []*cidr.CIDR
-	l7LBProxyPort             uint16 // Non-zero for L7 LB services
+	l7LBProxyPort             uint16 // Non-zero for egress L7 LB services
 
 	restoredFromDatapath bool
 }
@@ -127,6 +127,21 @@ func (svc *svcInfo) useMaglev() bool {
 			svc.svcType == lb.SVCTypeLoadBalancer)
 }
 
+type L7LBInfo struct {
+	// Names of the CEC resources that need this service's endpoints to be
+	// synced to to Envoy.
+	ingressOwners map[string]struct{}
+
+	// Name of the CEC resource that need this service to be forwarded to an
+	// L7 LB specified in that resource.
+	// Only one CEC may do this for any given service.
+	egressOwner string
+
+	// port number for egress redirection. Can be zero if only ingress
+	// resources have been registered.
+	proxyPort uint16
+}
+
 // Service is a service handler. Its main responsibility is to reflect
 // service-related changes into BPF maps used by datapath BPF programs.
 // The changes can be triggered either by k8s_watcher or directly by
@@ -146,7 +161,8 @@ type Service struct {
 	lbmap         LBMap
 	lastUpdatedTs atomic.Value
 
-	l7lbSvcs map[string]uint16 // key: namespace/name, value: local proxy port
+	// key: namespace/name
+	l7lbSvcs map[string]*L7LBInfo
 }
 
 // NewService creates a new instance of the service handler.
@@ -168,14 +184,18 @@ func NewService(monitorNotify monitorNotify) *Service {
 		monitorNotify:   monitorNotify,
 		healthServer:    localHealthServer,
 		lbmap:           lbmap.New(maglev, maglevTableSize),
-		l7lbSvcs:        map[string]uint16{},
+		l7lbSvcs:        map[string]*L7LBInfo{},
 	}
 	svc.lastUpdatedTs.Store(time.Now())
 
 	return svc
 }
 
-func (s *Service) RegisterL7LBService(name, namespace string, proxyPort uint16) error {
+// RegisterL7LBService makes the given service to be locally forwarded to the
+// given proxy port, but for egress only ('ingress' == false).  For both ingress
+// and egress Cilium will update the local Envoy proxy with service backends as
+// an Envoy endpoints (aka ClusterLoadAssignment) resources.
+func (s *Service) RegisterL7LBService(name, namespace string, cecName string, ingress bool, proxyPort uint16) error {
 	fullname := namespace + "/" + name
 
 	if proxyPort == 0 {
@@ -183,12 +203,11 @@ func (s *Service) RegisterL7LBService(name, namespace string, proxyPort uint16) 
 	}
 
 	s.Lock()
-	if port, found := s.l7lbSvcs[fullname]; found && port == proxyPort {
-		s.Unlock()
-		return nil
-	}
-	s.l7lbSvcs[fullname] = proxyPort
+	err := s.registerL7LBService(fullname, cecName, ingress, proxyPort)
 	s.Unlock()
+	if err != nil {
+		return err
+	}
 
 	log.WithFields(logrus.Fields{
 		logfields.ServiceName:      name,
@@ -200,7 +219,8 @@ func (s *Service) RegisterL7LBService(name, namespace string, proxyPort uint16) 
 	for _, svc := range svcs {
 		// Upsert the existing service again after updating 'l7lbSvcs'
 		// map so that the service will get the l7 flag set in bpf
-		// datapath.
+		// datapath and Envoy endpoint resources are created for
+		// registered services.
 		if _, _, err := s.UpsertService(svc); err != nil {
 			return fmt.Errorf("error while updating service in LB map: %s", err)
 		}
@@ -208,16 +228,39 @@ func (s *Service) RegisterL7LBService(name, namespace string, proxyPort uint16) 
 	return nil
 }
 
-func (s *Service) RemoveL7LBService(name, namespace string) error {
+// 's' must be locked
+func (s *Service) registerL7LBService(fullname string, cecName string, ingress bool, proxyPort uint16) error {
+	info := s.l7lbSvcs[fullname]
+	if info == nil {
+		info = &L7LBInfo{}
+		s.l7lbSvcs[fullname] = info
+	}
+	if ingress {
+		// Any number of ingress resources are supported
+		if info.ingressOwners == nil {
+			info.ingressOwners = make(map[string]struct{}, 1)
+		}
+		info.ingressOwners[cecName] = struct{}{}
+	} else {
+		// Only one egress resource for a given service may exist at a time.
+		if info.egressOwner != "" && info.egressOwner != cecName {
+			return fmt.Errorf("Service %q already registered for egress redirection via CiliumEnvoyConfig %q", fullname, info.egressOwner)
+		}
+		info.egressOwner = cecName
+		info.proxyPort = proxyPort
+	}
+	return nil
+}
+
+func (s *Service) RemoveL7LBService(name, namespace string, cecName string, ingress bool) error {
 	fullname := namespace + "/" + name
 
 	s.Lock()
-	if _, found := s.l7lbSvcs[fullname]; !found {
-		s.Unlock()
-		return nil
-	}
-	delete(s.l7lbSvcs, fullname)
+	err := s.removeL7LBService(fullname, cecName, ingress)
 	s.Unlock()
+	if err != nil {
+		return err
+	}
 
 	log.WithFields(logrus.Fields{
 		logfields.ServiceName:      name,
@@ -229,6 +272,29 @@ func (s *Service) RemoveL7LBService(name, namespace string) error {
 		if _, _, err := s.UpsertService(svc); err != nil {
 			return fmt.Errorf("Error while removing service from LB map: %s", err)
 		}
+	}
+	return nil
+}
+
+func (s *Service) removeL7LBService(fullname string, cecName string, ingress bool) error {
+	info, found := s.l7lbSvcs[fullname]
+	if !found {
+		return nil
+	}
+
+	if ingress {
+		if info.ingressOwners != nil {
+			delete(info.ingressOwners, cecName)
+		}
+	} else {
+		if info.egressOwner != cecName {
+			return fmt.Errorf("Service %q not registered for egress redirection via CiliumEnvoyConfig %q", fullname, cecName)
+		}
+		info.egressOwner = ""
+		info.proxyPort = 0
+	}
+	if len(info.ingressOwners) == 0 && info.egressOwner == "" {
+		delete(s.l7lbSvcs, fullname)
 	}
 	return nil
 }
@@ -421,12 +487,15 @@ func (s *Service) UpsertService(params *lb.SVC) (bool, lb.ID, error) {
 
 	// Set L7 LB for this service if registered.
 	name := params.Namespace + "/" + params.Name
-	proxyPort, _ := s.l7lbSvcs[name]
-	params.L7LBProxyPort = proxyPort
+	l7lbInfo, exists := s.l7lbSvcs[name]
+	if exists {
+		params.L7LBProxyPort = l7lbInfo.proxyPort
+	} else {
+		params.L7LBProxyPort = 0
+	}
 
 	// L7 LB is sharing a C union in the datapath, disable session
 	// affinity if L7 LB is configured for this service.
-	// Update L7 load balancer proxy port
 	if params.L7LBProxyPort != 0 {
 		params.SessionAffinity = false
 		params.SessionAffinityTimeoutSec = 0
@@ -502,7 +571,7 @@ func (s *Service) UpsertService(params *lb.SVC) (bool, lb.ID, error) {
 		return false, lb.ID(0), err
 	}
 
-	if svc.l7LBProxyPort != 0 {
+	if l7lbInfo != nil {
 		// Upsert backends as Envoy endpoints
 		if err = s.upsertEnvoyEndpoints(svc); err != nil {
 			return false, lb.ID(0), err
