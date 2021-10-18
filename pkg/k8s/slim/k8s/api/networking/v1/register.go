@@ -5,6 +5,7 @@
 package v1
 
 import (
+	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,6 +35,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&NetworkPolicy{},
 		&NetworkPolicyList{},
+		&v1.Ingress{},
+		&v1.IngressList{},
+		&v1.IngressClass{},
+		&v1.IngressClassList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
