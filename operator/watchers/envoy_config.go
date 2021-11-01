@@ -4,7 +4,17 @@
 package watchers
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/cilium/cilium/pkg/k8s"
+
+	envoy_extensions_transport_sockets_tls_v3 "github.com/cilium/proxy/go/envoy/extensions/transport_sockets/tls/v3"
+
+	envoy_config_core_v3 "github.com/cilium/proxy/go/envoy/config/core/v3"
 
 	"github.com/cilium/cilium/pkg/envoy"
 	"github.com/cilium/cilium/pkg/k8s/apis/cilium.io/v2alpha1"
@@ -19,6 +29,75 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func getSecret(namespace, name string) (string, string, error) {
+	secret := v1.Secret{}
+	err := k8s.Client().CoreV1().RESTClient().Get().Resource("secrets").Namespace(namespace).Name(name).Do(context.Background()).Into(&secret)
+	if err != nil {
+		return "", "", fmt.Errorf("failied to get secret %s/%s", namespace, name)
+	}
+	var tlsKey, tlsCrt, decodedTLSKey, decodedTLSCrt []byte
+	var ok bool
+	if tlsKey, ok = secret.Data["tls.key"]; ok {
+		return "", "", fmt.Errorf("missing tls.key field in secret: %s/%s", namespace, name)
+	}
+	if tlsCrt, ok = secret.Data["tls.crt"]; ok {
+		return "", "", fmt.Errorf("missing tls.crt field in secret: %s/%s", namespace, name)
+	}
+	_, err = base64.StdEncoding.Decode(decodedTLSKey, tlsKey)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to decode tls.key in secret: %s/%s", namespace, name)
+	}
+	_, err = base64.StdEncoding.Decode(decodedTLSCrt, tlsCrt)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to decode tls.crt in secret: %s/%s", namespace, name)
+	}
+	return string(tlsKey), string(tlsCrt), nil
+}
+
+func getTLS(ingress *slim_networkingv1.Ingress) (map[string]*envoy_config_core_v3.TransportSocket, error) {
+	var tls map[string]*envoy_config_core_v3.TransportSocket
+	for _, tlsConfig := range ingress.Spec.TLS {
+		key, crt, err := getSecret(ingress.Namespace, tlsConfig.SecretName)
+		if err != nil {
+			return nil, err
+		}
+		for _, host := range tlsConfig.Hosts {
+			upstreamContext := envoy_extensions_transport_sockets_tls_v3.UpstreamTlsContext{
+				CommonTlsContext: &envoy_extensions_transport_sockets_tls_v3.CommonTlsContext{
+					TlsCertificates: []*envoy_extensions_transport_sockets_tls_v3.TlsCertificate{
+						{
+							CertificateChain: &envoy_config_core_v3.DataSource{
+								Specifier: &envoy_config_core_v3.DataSource_InlineString{
+									InlineString: crt,
+								},
+							},
+							PrivateKey: &envoy_config_core_v3.DataSource{
+								Specifier: &envoy_config_core_v3.DataSource_InlineString{
+									InlineString: key,
+								},
+							},
+						},
+					},
+				},
+			}
+			upstreamContextBytes, err := proto.Marshal(&upstreamContext)
+			if err != nil {
+				return nil, err
+			}
+			tls[host] = &envoy_config_core_v3.TransportSocket{
+				Name: "tls",
+				ConfigType: &envoy_config_core_v3.TransportSocket_TypedConfig{
+					TypedConfig: &anypb.Any{
+						TypeUrl: "type.googleapis.com/envoy.api.v2.auth.UpstreamTlsContext",
+						Value:   upstreamContextBytes,
+					},
+				},
+			}
+		}
+	}
+	return tls, nil
+}
 
 func amazingIngressControllerBusinessLogic(ingress *slim_networkingv1.Ingress) (*v2alpha1.CiliumEnvoyConfig, error) {
 	backendServices := getBackendServices(ingress)
@@ -69,7 +148,8 @@ func getBackendServices(ingress *slim_networkingv1.Ingress) []*v2alpha1.Service 
 
 func getResources(ingress *slim_networkingv1.Ingress, backendServices []*v2alpha1.Service) ([]v2alpha1.XDSResource, error) {
 	var resources []v2alpha1.XDSResource
-	listener, err := getListenerResource(ingress)
+	tls, err := getTLS(ingress)
+	listener, err := getListenerResource(ingress, tls)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +167,7 @@ func getResources(ingress *slim_networkingv1.Ingress, backendServices []*v2alpha
 	return resources, nil
 }
 
-func getListenerResource(ingress *slim_networkingv1.Ingress) (v2alpha1.XDSResource, error) {
+func getListenerResource(ingress *slim_networkingv1.Ingress, tls map[string]*envoy_config_core_v3.TransportSocket) (v2alpha1.XDSResource, error) {
 	connectionManager := envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager{
 		StatPrefix: ingress.Name,
 		RouteSpecifier: &envoy_extensions_filters_network_http_connection_manager_v3.HttpConnectionManager_Rds{
@@ -122,6 +202,14 @@ func getListenerResource(ingress *slim_networkingv1.Ingress) (v2alpha1.XDSResour
 				},
 			},
 		},
+	}
+	if len(ingress.Spec.TLS) > 0 {
+		// just take the first one for now
+		domain := ingress.Spec.TLS[0].Hosts[0]
+		tlsconf := tls[domain]
+		if tlsconf != nil {
+			listener.FilterChains[0].TransportSocket = tlsconf
+		}
 	}
 	listenerBytes, err := proto.Marshal(&listener)
 	if err != nil {
