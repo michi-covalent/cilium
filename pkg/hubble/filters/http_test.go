@@ -11,7 +11,22 @@ import (
 	flowpb "github.com/cilium/cilium/api/v1/flow"
 	v1 "github.com/cilium/cilium/pkg/hubble/api/v1"
 	"github.com/cilium/cilium/pkg/monitor/api"
+	"github.com/stretchr/testify/assert"
 )
+
+func httpflow(http *flowpb.HTTP) *v1.Event {
+	return &v1.Event{
+		Event: &flowpb.Flow{
+			EventType: &flowpb.CiliumEventType{
+				Type: api.MessageTypeAccessLog,
+			},
+			L7: &flowpb.Layer7{
+				Record: &flowpb.Layer7_Http{
+					Http: http,
+				},
+			}},
+	}
+}
 
 func TestHTTPFilters(t *testing.T) {
 	httpFlow := func(http *flowpb.HTTP) *v1.Event {
@@ -397,4 +412,26 @@ func TestHTTPFilters(t *testing.T) {
 			}
 		})
 	}
+}
+
+// homework test
+//
+//	(http-method != GET) || (http-method == GET && http-path == '/private')
+// = (http-method != GET || http-method == GET) && (http-method != GET || http-path == '/private')
+// = http-method != GET || http-path == '/private'
+// = !(http-method == GET && http-path != '/private')
+func TestMichi(t *testing.T) {
+	denylist := []*flowpb.FlowFilter{
+		{
+			HttpMethod: []string{"GET"},
+			HttpPath:   []string{"^(.{0,7}|.{9,}|[^/].......|.[^p]......|..[^r].....|...[^i]....|....[^v]...|.....[^a]..|......[^t].|.......[^e])$"},
+			EventType:  []*flowpb.EventTypeFilter{{Type: api.MessageTypeAccessLog}},
+		},
+	}
+	filterFuncs, err := BuildFilterList(context.Background(), denylist, DefaultFilters)
+	assert.NoError(t, err)
+	assert.True(t, Apply(nil, filterFuncs, httpflow(&flowpb.HTTP{Method: "GET", Url: "/private"})))
+	assert.False(t, Apply(nil, filterFuncs, httpflow(&flowpb.HTTP{Method: "GET", Url: "/public"})))
+	assert.True(t, Apply(nil, filterFuncs, httpflow(&flowpb.HTTP{Method: "POST", Url: "/private"})))
+	assert.True(t, Apply(nil, filterFuncs, httpflow(&flowpb.HTTP{Method: "POST", Url: "/public"})))
 }
