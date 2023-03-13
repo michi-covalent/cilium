@@ -941,6 +941,10 @@ func initializeFlags() {
 	flags.Bool(option.HubbleSkipUnknownCGroupIDs, true, "Skip Hubble events with unknown cgroup ids")
 	option.BindEnv(Vp, option.HubbleSkipUnknownCGroupIDs)
 
+	flags.StringSlice(option.HubbleMonitorEvents, []string{},
+		"Cilium monitor events for Hubble to observe: debug, trace-sock, drop-notify, trace-notify, policy-verdict-notify, debug-capture, access-log, agent, lost. By default, Hubble observes all monitor events.")
+	option.BindEnv(Vp, option.HubbleMonitorEvents)
+
 	flags.StringSlice(option.DisableIptablesFeederRules, []string{}, "Chains to ignore when installing feeder rules.")
 	option.BindEnv(Vp, option.DisableIptablesFeederRules)
 
