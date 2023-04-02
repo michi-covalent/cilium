@@ -17,6 +17,7 @@ import (
 
 	pb "github.com/cilium/cilium/api/v1/flow"
 	"github.com/cilium/cilium/pkg/byteorder"
+	"github.com/cilium/cilium/pkg/hubble/metrics"
 	"github.com/cilium/cilium/pkg/hubble/parser/common"
 	"github.com/cilium/cilium/pkg/hubble/parser/errors"
 	"github.com/cilium/cilium/pkg/hubble/parser/getters"
@@ -107,6 +108,7 @@ func (p *Parser) Decode(data []byte, decoded *pb.Flow) error {
 	var eventSubType uint8
 	switch eventType {
 	case monitorAPI.MessageTypeDrop:
+		metrics.MonitorEvents.WithLabelValues("drop").Inc()
 		packetOffset = monitor.DropNotifyLen
 		dn = &monitor.DropNotify{}
 		if err := binary.Read(bytes.NewReader(data), byteorder.Native, dn); err != nil {
@@ -114,6 +116,7 @@ func (p *Parser) Decode(data []byte, decoded *pb.Flow) error {
 		}
 		eventSubType = dn.SubType
 	case monitorAPI.MessageTypeTrace:
+		metrics.MonitorEvents.WithLabelValues("trace-notify").Inc()
 		tn = &monitor.TraceNotify{}
 		if err := monitor.DecodeTraceNotify(data, tn); err != nil {
 			return fmt.Errorf("failed to parse trace: %v", err)
@@ -130,6 +133,7 @@ func (p *Parser) Decode(data []byte, decoded *pb.Flow) error {
 
 		packetOffset = (int)(tn.DataOffset())
 	case monitorAPI.MessageTypePolicyVerdict:
+		metrics.MonitorEvents.WithLabelValues("policy-verdict").Inc()
 		pvn = &monitor.PolicyVerdictNotify{}
 		if err := binary.Read(bytes.NewReader(data), byteorder.Native, pvn); err != nil {
 			return fmt.Errorf("failed to parse policy verdict: %v", err)
@@ -137,6 +141,7 @@ func (p *Parser) Decode(data []byte, decoded *pb.Flow) error {
 		eventSubType = pvn.SubType
 		packetOffset = monitor.PolicyVerdictNotifyLen
 	case monitorAPI.MessageTypeCapture:
+		metrics.MonitorEvents.WithLabelValues("capture").Inc()
 		dbg = &monitor.DebugCapture{}
 		if err := binary.Read(bytes.NewReader(data), byteorder.Native, dbg); err != nil {
 			return fmt.Errorf("failed to parse debug capture: %w", err)

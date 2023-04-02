@@ -50,6 +50,11 @@ var (
 		Name:      "lost_events_total",
 		Help:      "Number of lost events",
 	}, []string{labelSource})
+	MonitorEvents = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: api.DefaultPrometheusNamespace,
+		Name:      "monitor_events_total",
+		Help:      "Number of monitor events",
+	}, []string{"type"})
 )
 
 // ProcessFlow processes a flow and updates metrics
@@ -113,6 +118,7 @@ func initMetrics(address string, enabled api.Map, grpcMetrics *grpc_prometheus.S
 
 	registry.MustRegister(grpcMetrics)
 	registry.MustRegister(LostEvents)
+	registry.MustRegister(MonitorEvents)
 
 	errChan := make(chan error, 1)
 

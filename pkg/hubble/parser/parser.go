@@ -12,6 +12,7 @@ import (
 
 	pb "github.com/cilium/cilium/api/v1/flow"
 	v1 "github.com/cilium/cilium/pkg/hubble/api/v1"
+	"github.com/cilium/cilium/pkg/hubble/metrics"
 	observerTypes "github.com/cilium/cilium/pkg/hubble/observer/types"
 	"github.com/cilium/cilium/pkg/hubble/parser/agent"
 	"github.com/cilium/cilium/pkg/hubble/parser/debug"
@@ -109,6 +110,7 @@ func (p *Parser) Decode(monitorEvent *observerTypes.MonitorEvent) (*v1.Event, er
 		flow := &pb.Flow{}
 		switch payload.Data[0] {
 		case monitorAPI.MessageTypeDebug:
+			metrics.MonitorEvents.WithLabelValues("debug").Inc()
 			// Debug and TraceSock are both perf ring buffer events without any
 			// associated captured network packet header, so we treat them
 			// separately
@@ -119,6 +121,7 @@ func (p *Parser) Decode(monitorEvent *observerTypes.MonitorEvent) (*v1.Event, er
 			ev.Event = dbg
 			return ev, nil
 		case monitorAPI.MessageTypeTraceSock:
+			metrics.MonitorEvents.WithLabelValues("trace-sock").Inc()
 			if err := p.sock.Decode(payload.Data, flow); err != nil {
 				return nil, err
 			}
@@ -137,6 +140,7 @@ func (p *Parser) Decode(monitorEvent *observerTypes.MonitorEvent) (*v1.Event, er
 	case *observerTypes.AgentEvent:
 		switch payload.Type {
 		case monitorAPI.MessageTypeAccessLog:
+			metrics.MonitorEvents.WithLabelValues("access-log").Inc()
 			flow := &pb.Flow{}
 			logrecord, ok := payload.Message.(accesslog.LogRecord)
 			if !ok {
@@ -153,6 +157,7 @@ func (p *Parser) Decode(monitorEvent *observerTypes.MonitorEvent) (*v1.Event, er
 			ev.Event = flow
 			return ev, nil
 		case monitorAPI.MessageTypeAgent:
+			metrics.MonitorEvents.WithLabelValues("agent").Inc()
 			agentNotifyMessage, ok := payload.Message.(monitorAPI.AgentNotifyMessage)
 			if !ok {
 				return nil, errors.ErrInvalidAgentMessageType
@@ -163,6 +168,7 @@ func (p *Parser) Decode(monitorEvent *observerTypes.MonitorEvent) (*v1.Event, er
 			return nil, errors.ErrUnknownEventType
 		}
 	case *observerTypes.LostEvent:
+		metrics.MonitorEvents.WithLabelValues("lost").Inc()
 		ev.Event = &pb.LostEvent{
 			Source:        lostEventSourceToProto(payload.Source),
 			NumEventsLost: payload.NumLostEvents,
