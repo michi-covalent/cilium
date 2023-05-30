@@ -17,9 +17,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/cilium/cilium-cli/clustermesh"
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/clustermesh"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/k8s"
 )
 
 type UninstallParameters struct {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 // PodToService sends an HTTP request from all client Pods

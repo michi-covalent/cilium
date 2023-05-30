@@ -16,10 +16,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cilium/cilium-cli/connectivity"
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/sysdump"
+	"github.com/cilium/cilium/cli/connectivity"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/sysdump"
 )
 
 var errInternal = errors.New("encountered internal error, exiting")

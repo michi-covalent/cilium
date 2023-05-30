@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 // dummy implements a Scenario.

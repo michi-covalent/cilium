@@ -25,9 +25,9 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/junit"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/junit"
+	"github.com/cilium/cilium/cli/k8s"
 )
 
 // ConnectivityTest is the root context of the connectivity test suite

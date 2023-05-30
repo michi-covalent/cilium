@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 
 	semver2 "github.com/blang/semver/v4"
 	helm "github.com/cilium/charts"

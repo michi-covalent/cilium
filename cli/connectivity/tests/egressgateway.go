@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 )
 
 // EgressGateway is a test case which, given the cegp-sample

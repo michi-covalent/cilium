@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 // PodToPod generates one HTTP request from each client pod

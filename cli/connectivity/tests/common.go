@@ -6,7 +6,7 @@ package tests
 import (
 	"strconv"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 type labelsContainer interface {

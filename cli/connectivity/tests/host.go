@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 // PodToHost sends an ICMP ping from all client Pods to all nodes

@@ -9,8 +9,8 @@ import (
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 
-	"github.com/cilium/cilium-cli/internal/utils"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/internal/utils"
+	"github.com/cilium/cilium/cli/k8s"
 )
 
 func needsNodeInit(k k8s.Kind, version semver.Version) bool {

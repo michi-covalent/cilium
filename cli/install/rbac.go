@@ -9,8 +9,8 @@ import (
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 )
 
 func (k *K8sInstaller) NewServiceAccount(name string) *corev1.ServiceAccount {

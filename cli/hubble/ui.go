@@ -9,8 +9,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 	"github.com/pkg/browser"

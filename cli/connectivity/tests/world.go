@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 // PodToWorld sends multiple HTTP(S) requests to ExternalTarget

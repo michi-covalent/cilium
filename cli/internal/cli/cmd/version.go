@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cilium/cilium-cli/defaults"
+	"github.com/cilium/cilium/cli/defaults"
 )
 
 func getLatestStableVersion() string {

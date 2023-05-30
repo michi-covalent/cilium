@@ -6,8 +6,8 @@ package cmd
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/sysdump"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/sysdump"
 )
 
 // Hooks to extend the default cilium-cli command with additional functionality.

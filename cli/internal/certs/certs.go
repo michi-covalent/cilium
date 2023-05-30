@@ -19,8 +19,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/k8s"
 )
 
 type CertManager struct {

@@ -20,8 +20,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	clientsetscheme "k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/k8s"
 )
 
 /* How many times we should retry getting the policy revisions before

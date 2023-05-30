@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/hubble"
-	"github.com/cilium/cilium-cli/install"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/hubble"
+	"github.com/cilium/cilium/cli/install"
 )
 
 func newCmdInstall() *cobra.Command {
@@ -224,7 +224,7 @@ cilium upgrade --version %s
 
 // addCommonInstallFlags adds install command flags that are shared between classic and helm mode.
 func addCommonInstallFlags(cmd *cobra.Command, params *install.Parameters) {
-	// We can't get rid of --cluster-name until we fix https://github.com/cilium/cilium-cli/issues/1347.
+	// We can't get rid of --cluster-name until we fix https://github.com/cilium/cilium/cli/issues/1347.
 	cmd.Flags().StringVar(&params.ClusterName, "cluster-name", "", "Name of the cluster")
 	cmd.Flags().MarkDeprecated("cluster-name", "This can now be overridden via `helm-set` (Helm value: `cluster.name`).")
 	cmd.Flags().StringVar(&params.Version, "version", defaults.Version, "Cilium version to install")

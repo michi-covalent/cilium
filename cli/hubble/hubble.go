@@ -14,12 +14,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/certs"
-	"github.com/cilium/cilium-cli/internal/helm"
-	"github.com/cilium/cilium-cli/internal/utils"
-	"github.com/cilium/cilium-cli/k8s"
-	"github.com/cilium/cilium-cli/status"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/certs"
+	"github.com/cilium/cilium/cli/internal/helm"
+	"github.com/cilium/cilium/cli/internal/utils"
+	"github.com/cilium/cilium/cli/k8s"
+	"github.com/cilium/cilium/cli/status"
 
 	"github.com/blang/semver/v4"
 	"github.com/cilium/cilium/api/v1/models"

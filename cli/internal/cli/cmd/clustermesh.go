@@ -13,10 +13,10 @@ import (
 	k8sConst "github.com/cilium/cilium/pkg/k8s/apis/cilium.io"
 	"github.com/spf13/cobra"
 
-	"github.com/cilium/cilium-cli/clustermesh"
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
-	"github.com/cilium/cilium-cli/status"
+	"github.com/cilium/cilium/cli/clustermesh"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
+	"github.com/cilium/cilium/cli/status"
 )
 
 func newCmdClusterMesh() *cobra.Command {

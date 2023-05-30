@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
+	"github.com/cilium/cilium/cli/connectivity/check"
 )
 
 type requestType int

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 )
 
 func TestK8sHubbleRelayImage(t *testing.T) {

@@ -25,8 +25,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cilium/cilium-cli/connectivity/filters"
-	"github.com/cilium/cilium-cli/defaults"
+	"github.com/cilium/cilium/cli/connectivity/filters"
+	"github.com/cilium/cilium/cli/defaults"
 )
 
 const (

@@ -13,8 +13,8 @@ import (
 
 	"k8s.io/client-go/util/jsonpath"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/defaults"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/defaults"
 )
 
 func CiliumHealth() check.Scenario {

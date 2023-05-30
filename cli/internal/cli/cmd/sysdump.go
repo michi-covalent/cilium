@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
-	"github.com/cilium/cilium-cli/sysdump"
+	"github.com/cilium/cilium/cli/sysdump"
 )
 
 var (

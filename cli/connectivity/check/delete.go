@@ -14,11 +14,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/helm"
-	"github.com/cilium/cilium-cli/internal/utils"
-	"github.com/cilium/cilium-cli/k8s"
-	"github.com/cilium/cilium-cli/status"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/helm"
+	"github.com/cilium/cilium/cli/internal/utils"
+	"github.com/cilium/cilium/cli/k8s"
+	"github.com/cilium/cilium/cli/status"
 )
 
 func (ct *ConnectivityTest) generateAgentDaemonSet() *appsv1.DaemonSet {

@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/helm"
-	"github.com/cilium/cilium-cli/k8s"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/helm"
+	"github.com/cilium/cilium/cli/k8s"
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 	"github.com/spf13/pflag"

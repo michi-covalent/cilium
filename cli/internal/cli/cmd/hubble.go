@@ -7,9 +7,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/hubble"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/hubble"
+	"github.com/cilium/cilium/cli/internal/utils"
 
 	"github.com/spf13/cobra"
 )

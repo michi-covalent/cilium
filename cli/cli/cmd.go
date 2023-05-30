@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/cilium/cilium-cli/connectivity/check"
-	"github.com/cilium/cilium-cli/internal/cli/cmd"
-	"github.com/cilium/cilium-cli/sysdump"
+	"github.com/cilium/cilium/cli/connectivity/check"
+	"github.com/cilium/cilium/cli/internal/cli/cmd"
+	"github.com/cilium/cilium/cli/sysdump"
 )
 
 // The following variables are set at compile time via LDFLAGS.

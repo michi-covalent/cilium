@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/utils"
 
 	"github.com/cilium/cilium/pkg/versioncheck"
 	appsv1 "k8s.io/api/apps/v1"

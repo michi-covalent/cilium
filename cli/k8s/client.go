@@ -49,9 +49,9 @@ import (
 	tetragonv1alpha1 "github.com/cilium/tetragon/pkg/k8s/apis/cilium.io/v1alpha1"
 	tetragonClientset "github.com/cilium/tetragon/pkg/k8s/client/clientset/versioned"
 
-	"github.com/cilium/cilium-cli/defaults"
-	"github.com/cilium/cilium-cli/internal/helm"
-	"github.com/cilium/cilium-cli/internal/utils"
+	"github.com/cilium/cilium/cli/defaults"
+	"github.com/cilium/cilium/cli/internal/helm"
+	"github.com/cilium/cilium/cli/internal/utils"
 )
 
 type Client struct {
