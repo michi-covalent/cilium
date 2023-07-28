@@ -1,0 +1,13 @@
+name: Fail if a dont-merge/* label exists
+
+on:
+  pull_request:
+    types: [synchronize, opened, reopened, labeled, unlabeled]
+
+jobs:
+  do-not-merge:
+    if: ${{ startsWith(github.event.*.labels.*.name, 'dont-merge/') }}
+    name: Prevent Merging
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
